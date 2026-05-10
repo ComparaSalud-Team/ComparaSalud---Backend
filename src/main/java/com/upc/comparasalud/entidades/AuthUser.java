@@ -1,10 +1,7 @@
 package com.upc.comparasalud.entidades;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Table(name = "auth_users")
 public class AuthUser {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,7 +24,7 @@ public class AuthUser {
     private String password;
 
     @Column(name = "role_id")
-    private Integer roleId;           // 1 = Patient, 2 = Provider, 3 = Admin
+    private Integer roleId;  // 1 = Patient, 2 = Provider, 3 = Admin
 
     @Column(name = "is_verified")
     private Boolean isVerified = false;
@@ -34,13 +32,24 @@ public class AuthUser {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    // HU09 – foto de perfil (URL guardada tras upload)
+    @Column(name = "profile_photo_url")
+    private String profilePhotoUrl;
+
+    // HU02 – bloqueo por intentos fallidos
+    @Column(name = "failed_login_attempts")
+    private Integer failedLoginAttempts = 0;
+
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
 
     @OneToOne(mappedBy = "authUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Patient patient;
 
     @OneToOne(mappedBy = "authUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Provider provider;
+
+    public boolean isLocked() {
+        return lockedUntil != null && LocalDateTime.now().isBefore(lockedUntil);
+    }
 }
-
-
-

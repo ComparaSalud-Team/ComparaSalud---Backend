@@ -2,11 +2,13 @@ package com.upc.comparasalud.controllers;
 
 import com.upc.comparasalud.dtos.AppointmentRequestDTO;
 import com.upc.comparasalud.dtos.AppointmentResponseDTO;
-import com.upc.comparasalud.dtos.CancelAppointmentRequestDTO;
 import com.upc.comparasalud.dtos.RescheduleAppointmentRequestDTO;
 import com.upc.comparasalud.services.AppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api")
@@ -17,20 +19,25 @@ public class AppointmentController {
 
     // HU33 – Agendar cita
     @PostMapping("/appointments")
-    public AppointmentResponseDTO agendarCita(@RequestBody AppointmentRequestDTO request) {
-        return appointmentService.agendarCita(request);
-    }
-    // HU34 – Cancelar cita
-    @DeleteMapping("/appointments/{id}/cancel")
-    public AppointmentResponseDTO cancelarCita(@PathVariable Long id) {
-        return appointmentService.cancelarCita(id);
+    public ResponseEntity<AppointmentResponseDTO> agendarCita(
+            @RequestBody AppointmentRequestDTO request) {
+        return ResponseEntity.ok(appointmentService.agendarCita(request));
     }
 
-    // HU35 – Reprogramar cita
-    @PatchMapping("/appointments/{id}/reschedule")
-    public AppointmentResponseDTO reprogramarCita(
+    // HU34 – Cancelar cita  (PUT, no DELETE; status → CANCELLED, no se borra)
+    @PutMapping("/appointments/{id}/cancel")
+    public ResponseEntity<AppointmentResponseDTO> cancelarCita(
             @PathVariable Long id,
-            @RequestBody RescheduleAppointmentRequestDTO request) {
-        return appointmentService.reprogramarCita(id, request);
+            Principal principal) {
+        return ResponseEntity.ok(appointmentService.cancelarCita(id, principal.getName()));
+    }
+
+    // HU35 – Reprogramar cita  (PUT, status → SCHEDULED)
+    @PutMapping("/appointments/{id}/reschedule")
+    public ResponseEntity<AppointmentResponseDTO> reprogramarCita(
+            @PathVariable Long id,
+            @RequestBody RescheduleAppointmentRequestDTO request,
+            Principal principal) {
+        return ResponseEntity.ok(appointmentService.reprogramarCita(id, request, principal.getName()));
     }
 }

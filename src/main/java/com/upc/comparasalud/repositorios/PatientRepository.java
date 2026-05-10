@@ -8,4 +8,6 @@ import java.util.Optional;
 
 public interface PatientRepository extends JpaRepository<Patient, Long> {
     Optional<Patient> findByAuthUser(AuthUser authUser);
+    boolean existsByPhoneAndIdNot(String phone, Long id);
+    boolean existsByPhone(String phone);
 }
