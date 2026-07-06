@@ -85,4 +85,9 @@ public class MedicalServiceService {
                 s.getCategory() != null ? s.getCategory().getName() : null
         );
     }
+    // HU27 – Listar todos los servicios activos
+    public List<MedicalServiceDTO> listarActivos() {
+        return serviceRepository.findByIsActiveTrue()
+                .stream().map(this::toServiceDTO).toList();
+    }
 }

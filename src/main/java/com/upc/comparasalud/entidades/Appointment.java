@@ -45,6 +45,12 @@ public class Appointment {
     @Column(length = 255)
     private String notes;
 
+    @Column(name = "payment_method", length = 30)
+    private String paymentMethod;
+
+    @Column(name = "amount_paid", precision = 10, scale = 2)
+    private java.math.BigDecimal amountPaid;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

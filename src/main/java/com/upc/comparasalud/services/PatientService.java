@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -77,10 +76,35 @@ public class PatientService {
         if (patientRepository.existsByPhoneAndIdNot(dto.getPhone(), id)) {
             throw new ConflictException("El número telefónico ya está registrado en otra cuenta");
         }
-
         patient.setName(dto.getName());
         patient.setPhone(dto.getPhone());
         patient.setCountry(dto.getCountry());
+
+        if (dto.getBirthday() != null && !dto.getBirthday().isBlank()) {
+            try {
+                patient.setBirthday(java.time.LocalDate.parse(dto.getBirthday()));
+            } catch (Exception ignored) {}
+        }
+
+        patient.setDni(dto.getDni());
+        patient.setEstadoCivil(dto.getEstadoCivil());
+        patient.setProfesion(dto.getProfesion());
+        patient.setIdiomaPreferido(dto.getIdiomaPreferido());
+        patient.setDireccion(dto.getDireccion());
+        patient.setGenero(dto.getGenero());
+
+        patient.setTipoSangre(dto.getTipoSangre());
+        patient.setAlergias(dto.getAlergias());
+        patient.setCondicionesMedicas(dto.getCondicionesMedicas());
+        patient.setMedicamentosActuales(dto.getMedicamentosActuales());
+        patient.setSeguroMedicoNombre(dto.getSeguroMedicoNombre());
+        patient.setSeguroMedicoPlan(dto.getSeguroMedicoPlan());
+
+        patient.setEmergenciaNombre(dto.getEmergenciaNombre());
+        patient.setEmergenciaParentesco(dto.getEmergenciaParentesco());
+        patient.setEmergenciaTelefono(dto.getEmergenciaTelefono());
+        patient.setEmergenciaDireccion(dto.getEmergenciaDireccion());
+
         patient = patientRepository.save(patient);
 
         return toDTO(patient);
@@ -133,9 +157,34 @@ public class PatientService {
 
     // ── Private helper ───────────────────────────────────────────────────────
     private PatientDTO toDTO(Patient patient) {
-        PatientDTO dto = modelMapper.map(patient, PatientDTO.class);
-        dto.setEmail(patient.getAuthUser().getEmail());
+        PatientDTO dto = new PatientDTO();
+        dto.setId(patient.getId());
         dto.setAuthUserId(patient.getAuthUser().getId());
+        dto.setEmail(patient.getAuthUser().getEmail());
+        dto.setName(patient.getName());
+        dto.setPhone(patient.getPhone());
+        dto.setCountry(patient.getCountry());
+        dto.setBirthday(patient.getBirthday() != null ? patient.getBirthday().toString() : null);
+
+        dto.setDni(patient.getDni());
+        dto.setEstadoCivil(patient.getEstadoCivil());
+        dto.setProfesion(patient.getProfesion());
+        dto.setIdiomaPreferido(patient.getIdiomaPreferido());
+        dto.setDireccion(patient.getDireccion());
+        dto.setGenero(patient.getGenero());
+
+        dto.setTipoSangre(patient.getTipoSangre());
+        dto.setAlergias(patient.getAlergias());
+        dto.setCondicionesMedicas(patient.getCondicionesMedicas());
+        dto.setMedicamentosActuales(patient.getMedicamentosActuales());
+        dto.setSeguroMedicoNombre(patient.getSeguroMedicoNombre());
+        dto.setSeguroMedicoPlan(patient.getSeguroMedicoPlan());
+
+        dto.setEmergenciaNombre(patient.getEmergenciaNombre());
+        dto.setEmergenciaParentesco(patient.getEmergenciaParentesco());
+        dto.setEmergenciaTelefono(patient.getEmergenciaTelefono());
+        dto.setEmergenciaDireccion(patient.getEmergenciaDireccion());
+
         return dto;
     }
 }

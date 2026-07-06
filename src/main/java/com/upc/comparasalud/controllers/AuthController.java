@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Map;
 
 @RestController
@@ -26,6 +27,15 @@ public class AuthController {
     @PostMapping("/register/provider")
     public ResponseEntity<ProviderDTO> registerProvider(@Valid @RequestBody RegisterProviderRequestDTO dto) {
         return ResponseEntity.ok(authService.registrarProveedor(dto));
+    }
+    @PostMapping("/register/admin")
+    public ResponseEntity<PatientDTO> registerAdmin(@Valid @RequestBody RegisterPatientRequestDTO dto) {
+        return ResponseEntity.ok(authService.registrarAdmin(dto));
+    }
+    // HU – Registro de clínica
+    @PostMapping("/register/clinic")
+    public ResponseEntity<ClinicDTO> registerClinic(@Valid @RequestBody RegisterClinicRequestDTO dto) {
+        return ResponseEntity.ok(authService.registrarClinica(dto));
     }
 
     // HU02 – Login
@@ -60,5 +70,41 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO dto) {
         String msg = authService.resetPassword(dto);
         return ResponseEntity.ok(Map.of("message", msg));
+    }
+
+    // HU – Cambiar contraseña
+    @PutMapping("/change-password")
+    public ResponseEntity<Map<String, String>> cambiarPassword(
+            @RequestBody ChangePasswordRequestDTO dto,
+            Principal principal) {
+        authService.cambiarPassword(dto, principal.getName());
+        return ResponseEntity.ok(Map.of("message", "Contraseña actualizada correctamente"));
+    }
+
+    // HU – Cambiar email
+    @PutMapping("/change-email")
+    public ResponseEntity<Map<String, String>> cambiarEmail(
+            @RequestBody ChangeEmailRequestDTO dto,
+            Principal principal) {
+        authService.cambiarEmail(dto, principal.getName());
+        return ResponseEntity.ok(Map.of("message", "Correo actualizado correctamente"));
+    }
+
+    // HU – Eliminar cuenta
+    @DeleteMapping("/delete-account/{authUserId}")
+    public ResponseEntity<Map<String, String>> eliminarCuenta(
+            @PathVariable Long authUserId,
+            @RequestParam String password,
+            Principal principal) {
+        authService.eliminarCuenta(authUserId, password, principal.getName());
+        return ResponseEntity.ok(Map.of("message", "Cuenta eliminada correctamente"));
+    }
+
+    // HU – Actividad reciente de seguridad
+    @GetMapping("/security-activity/{authUserId}")
+    public ResponseEntity<java.util.List<SecurityActivityDTO>> obtenerActividadReciente(
+            @PathVariable Long authUserId,
+            Principal principal) {
+        return ResponseEntity.ok(authService.obtenerActividadReciente(authUserId, principal.getName()));
     }
 }

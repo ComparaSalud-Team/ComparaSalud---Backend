@@ -13,9 +13,11 @@ public class AppointmentRequestDTO {
 
     private Long patientId;
     private Long providerId;
-    private String serviceName;        // Ej: "Consulta General"
+    private String serviceName;
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
     private String notes;
+
+    private String paymentMethod;
 }

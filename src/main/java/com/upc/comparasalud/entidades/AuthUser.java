@@ -24,7 +24,7 @@ public class AuthUser {
     private String password;
 
     @Column(name = "role_id")
-    private Integer roleId;  // 1 = Patient, 2 = Provider, 3 = Admin
+    private Integer roleId;  // 1 = Patient, 2 = Provider, 3 = Admin, 4 = Clinic
 
     @Column(name = "is_verified")
     private Boolean isVerified = false;
@@ -32,11 +32,9 @@ public class AuthUser {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    // HU09 – foto de perfil (URL guardada tras upload)
     @Column(name = "profile_photo_url")
     private String profilePhotoUrl;
 
-    // HU02 – bloqueo por intentos fallidos
     @Column(name = "failed_login_attempts")
     private Integer failedLoginAttempts = 0;
 
@@ -48,6 +46,9 @@ public class AuthUser {
 
     @OneToOne(mappedBy = "authUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Provider provider;
+
+    @OneToOne(mappedBy = "authUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Clinic clinic;
 
     public boolean isLocked() {
         return lockedUntil != null && LocalDateTime.now().isBefore(lockedUntil);

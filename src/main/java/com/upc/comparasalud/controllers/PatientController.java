@@ -2,6 +2,8 @@ package com.upc.comparasalud.controllers;
 
 import com.upc.comparasalud.dtos.PatientDTO;
 import com.upc.comparasalud.services.PatientService;
+import com.upc.comparasalud.services.ProviderService;
+import com.upc.comparasalud.services.ClinicService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +22,23 @@ public class PatientController {
 
     @Autowired
     private PatientService patientService;
+    @Autowired
+    private ProviderService providerService;
+    @Autowired
+    private ClinicService clinicService;
 
     // HU07 – Ver perfil propio (GET /users/profile)
     @GetMapping("/users/profile")
-    public ResponseEntity<PatientDTO> verPerfilPropio(Principal principal) {
-        return ResponseEntity.ok(patientService.verPerfilPropio(principal.getName()));
+    public ResponseEntity<?> verPerfilPropio(Principal principal) {
+        try {
+            return ResponseEntity.ok(patientService.verPerfilPropio(principal.getName()));
+        } catch (Exception e) {
+            try {
+                return ResponseEntity.ok(providerService.buscarPorEmail(principal.getName()));
+            } catch (Exception e2) {
+                return ResponseEntity.ok(clinicService.obtenerPorEmail(principal.getName()));
+            }
+        }
     }
 
     // HU07 – Ver perfil por ID (admin o uso interno)
@@ -58,7 +72,7 @@ public class PatientController {
             PatientDTO updated = patientService.subirFotoPerfil(id, file, principal.getName());
             return ResponseEntity.ok(Map.of(
                     "message", "Perfil actualizado correctamente",
-                    "profilePhotoUrl", updated.getEmail() // adjusted: real URL is in AuthUser
+                    "profilePhotoUrl", updated.getEmail()
             ));
         } catch (IOException e) {
             return ResponseEntity.internalServerError()

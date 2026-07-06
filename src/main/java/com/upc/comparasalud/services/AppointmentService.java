@@ -3,6 +3,8 @@ package com.upc.comparasalud.services;
 import com.upc.comparasalud.dtos.AppointmentRequestDTO;
 import com.upc.comparasalud.dtos.AppointmentResponseDTO;
 import com.upc.comparasalud.dtos.RescheduleAppointmentRequestDTO;
+import com.upc.comparasalud.dtos.AppointmentHistoryDTO;
+import java.util.List;
 import com.upc.comparasalud.entidades.Appointment;
 import com.upc.comparasalud.entidades.Patient;
 import com.upc.comparasalud.entidades.Provider;
@@ -14,7 +16,6 @@ import com.upc.comparasalud.repositorios.ProviderRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -62,7 +63,17 @@ public class AppointmentService {
         appointment.setStartTime(request.getStartTime());
         appointment.setEndTime(request.getEndTime());
         appointment.setNotes(request.getNotes());
-        appointment.setStatus("PENDING");
+
+        // Con pago confirmado la cita nace confirmada; sin método de pago
+        // queda pendiente (flujo antiguo, se mantiene por compatibilidad).
+        if (request.getPaymentMethod() != null && !request.getPaymentMethod().isBlank()) {
+            appointment.setPaymentMethod(request.getPaymentMethod());
+            appointment.setAmountPaid(provider.getPricePerAppointment());
+            appointment.setStatus("SCHEDULED");
+        } else {
+            appointment.setStatus("PENDING");
+        }
+
         appointment.setCreatedAt(LocalDateTime.now());
         appointment = appointmentRepository.save(appointment);
 
@@ -158,5 +169,69 @@ public class AppointmentService {
         r.setStartTime(a.getStartTime());
         r.setEndTime(a.getEndTime());
         return r;
+    }
+
+    // HU nueva – Historial de citas del paciente
+    public List<AppointmentHistoryDTO> obtenerHistorial(Long userId) {
+
+        List<Appointment> historial = appointmentRepository.findHistoryByPatientUserId(userId);
+
+        if (historial.isEmpty()) {
+            throw new ResourceNotFoundException("No hay registros de citas para este usuario");
+        }
+
+        return historial.stream().map(this::toHistoryDTO).toList();
+    }
+    public List<AppointmentHistoryDTO> obtenerProximasCitas(Long userId) {
+        List<Appointment> proximas = appointmentRepository.findUpcomingByPatientUserId(userId);
+        return proximas.stream().map(this::toHistoryDTO).toList();
+    }
+
+    // Detalle de una cita puntual (página "Ver detalles" / "Reagendar cita").
+    public AppointmentHistoryDTO obtenerPorId(Long id, String callerEmail) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
+        checkOwnership(appointment, callerEmail);
+        return toHistoryDTO(appointment);
+    }
+
+    private AppointmentHistoryDTO toHistoryDTO(Appointment a) {
+        Provider provider = a.getProvider();
+        Patient patient = a.getPatient();
+        AppointmentHistoryDTO dto = new AppointmentHistoryDTO();
+        dto.setAppointmentId(a.getId());
+        dto.setDate(a.getDate().toString());
+        dto.setTime(a.getStartTime().toString());
+        dto.setStatus(a.getStatus());
+        dto.setDoctor(provider.getFullName());
+        dto.setProviderId(provider.getId());
+        dto.setSpecialty(provider.getSpecialty());
+        dto.setPhotoUrl(provider.getAuthUser().getProfilePhotoUrl());
+        dto.setRating(provider.getAverageRating());
+        dto.setPrice(provider.getPricePerAppointment());
+        dto.setDurationMinutes(provider.getDurationMinutes());
+        dto.setModality(provider.getModality());
+        dto.setDistrict(provider.getDistrict());
+
+        dto.setPatientId(patient.getId());
+        dto.setPatient(patient.getName());
+        dto.setPatientPhotoUrl(patient.getAuthUser().getProfilePhotoUrl());
+        dto.setReason(a.getServiceName());
+
+        return dto;
+    }
+    // Historial de citas del proveedor (COMPLETED y CANCELLED)
+    public List<AppointmentHistoryDTO> obtenerHistorialProveedor(Long providerId) {
+        List<Appointment> historial = appointmentRepository.findHistoryByProviderId(providerId);
+        if (historial.isEmpty()) {
+            throw new ResourceNotFoundException("No hay registros de citas para este proveedor");
+        }
+        return historial.stream().map(this::toHistoryDTO).toList();
+    }
+
+    // Próximas citas del proveedor
+    public List<AppointmentHistoryDTO> obtenerProximasCitasProveedor(Long providerId) {
+        List<Appointment> proximas = appointmentRepository.findUpcomingByProviderId(providerId);
+        return proximas.stream().map(this::toHistoryDTO).toList();
     }
 }
