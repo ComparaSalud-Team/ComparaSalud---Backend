@@ -11,6 +11,7 @@ import java.security.Principal;
 import java.util.Map;
 
 @RestController
+@CrossOrigin (origins = "${ip.frontend}", allowCredentials = "true",exposedHeaders = "Authorization") //para cloud
 @RequestMapping("/api/auth")
 public class AuthController {
 
