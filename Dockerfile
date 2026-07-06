@@ -1,14 +1,15 @@
 FROM eclipse-temurin:21-jdk-jammy
 
+RUN apt-get update && apt-get install -y maven
+
 WORKDIR /app
 
 COPY pom.xml ./
-COPY mvnw ./
-RUN chmod +x mvnw
+RUN mvn dependency:go-offline -B
 
 COPY src ./src
 
-RUN ./mvnw clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B
 
 EXPOSE 8081
 
