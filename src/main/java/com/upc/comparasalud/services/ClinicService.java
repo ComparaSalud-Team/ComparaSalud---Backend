@@ -174,10 +174,6 @@ public class ClinicService {
     }
 
     // HU nueva – El paciente ve los servicios de una clínica.
-    // NOTA: hoy el catálogo de servicios (MedicalService) no está vinculado a
-    // Provider ni a Clinic, así que por ahora se devuelve el catálogo general
-    // de servicios activos (mismo criterio que ya usa /providers/{id}/services).
-    // Cuando se modele esa relación, este método debe filtrar por clínica real.
     public List<MedicalServiceDTO> serviciosDeClinica(Long clinicId) {
         obtenerOFallar(clinicId);
         return medicalServiceService.listarActivos();

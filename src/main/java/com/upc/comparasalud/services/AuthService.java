@@ -220,7 +220,6 @@ public class AuthService {
         AuthUser user = authUserRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new BadRequestException("Los datos colocados no son válidos"));
 
-        // Check account lock (HU02 – bloqueo por intentos fallidos)
         if (user.isLocked()) {
             throw new ForbiddenException("Cuenta bloqueada temporalmente. Intenta de nuevo en " + LOCK_MINUTES + " minutos.");
         }
@@ -236,7 +235,6 @@ public class AuthService {
             throw new BadRequestException("Los datos colocados no son válidos");
         }
 
-        // Successful login → reset counter
         user.setFailedLoginAttempts(0);
         user.setLockedUntil(null);
         authUserRepository.save(user);
